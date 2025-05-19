@@ -11,40 +11,31 @@ const { Model } = require("sequelize");
 
 const router = express.Router();
 
-// Criar a rota visualizar com método get
-router.get("/", async (req, res) => {
+// Criar rota editar com metodo put
+router.put("/atender", async (req, res) => {
 
-    // Recuperar os registros do banco de dados
-    const lista = await db.pacientCont.findAll({
+    // Receber os dados enviados no corpo da requisição
+    const data = req.body;
 
-        // Indicar quais colunas recuperar
-        attributes: ['id', 'name', 'cell', 'senha', 'posicao','status'],
-        
-        // Buscar dados na tabela secundaria
-        include: [{ model:db.situacoes , attributes: ['nomeSituacao'] }],
-
-
-        // Acrescentar condição para indicar qual registro deve ser retornado do banco de dados
-        where: { status: '3'},
-
-
-        // Ordenar os registros pela coluna id na forma decrescente
-        order: [['id', 'DESC']],
-
-        
-    });
-
-    if (lista) {
-        return res.json({
-            error: false,
-            lista
+    // Editar no banco de dados
+    await db.pacientCont.update(data, { where: { id: data.id } })
+        .then(() => {
+            
+            // Retornar objeto como resposta
+            return res.json({
+                error: false,
+                message: "Usuário editado com sucesso!"
+            });
+        }).catch(() => {
+            // Retornar objeto como resposta
+            return res.status(400).json({
+                error: true,
+                message: "Erro: Usuário não editado com sucesso!"
+            });
         });
-    } else {
-        return res.status(400).json({
-            error: true,
-            message: "Erro: Nenhum registro sobre empresa encontrado!"
-        });
-    }
+
+
+  
 });
 
 // Exportar a instrução que está dentro da constante router 
