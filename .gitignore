@@ -1,0 +1,3 @@
+# Ignorar pastas com dependências
+node_modules/
+venv/
