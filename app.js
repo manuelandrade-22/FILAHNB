@@ -9,15 +9,22 @@ const app = express()
 const db = require("./db/models");
 
 
+// Criar o middleware para receber os dados no corpo da requisição
+app.use(express.json());
+
 // Incluir as CONTROLLERS
 const listar = require("./controlers/listar");
+const visualizar = require("./controlers/visualizar");
+const cadastrar = require("./controlers/cadastrar");
 const atender = require("./controlers/atender");
 
 
 
 // Criar as rotas
-app.use('/listar', listar);
-app.use('/atender', atender);
+app.use('/', listar);
+app.use('/', visualizar);
+app.use('/', cadastrar);
+app.use('/', atender);
 
 app.listen(8080, ()=>{
     console.log("Servidor iniciado na porta: http://localhost:8080")

@@ -4,8 +4,9 @@ const express = require("express");
 // Chamar a função express
 
 // importar a variavel de banco de dados
-const db = require('./../db/models'); 
-const { Model} = require("sequelize");
+const db = require('../db/models'); 
+
+const { Model } = require("sequelize");
 
 
 
@@ -14,37 +15,32 @@ const router = express.Router();
 // Criar a rota listar com método get: http://localhost:8080/listar
 
 // 
-router.get("/listar", async (req, res) => {
+router.get("/visualizar/:id", async (req, res) => {
 
-   
+    // Receber o parâmetro enviado na URL
+    // http://localhost:8080/users/7
+     const { id } = req.params;
+
 
     // Recuperar os registros do banco de dados
-    const lista = await db.pacientCont.findAll({
+    const visualizar = await db.pacientCont.findOne({
 
         // Indicar quais colunas recuperar
         attributes: ['id', 'name', 'cell', 'senha', 'posicao','status'],
+
+       // Acrescentado condição para indicar qual registro deve ser retornado do banco de dados
+        where: { id },
         
         // Buscar dados na tabela secundaria
-        include: [{ model:db.situacoes , attributes: ['nomeSituacao'] }],
+        include: [{ model:db.situacoes , attributes: ['nomeSituacao'] }]
 
-
-        // Ordenar os registros pela coluna id na forma decrescente
-        order: [['id', 'DESC']],
-
-        where:{
-            status:"1"
-        }
-
-
-        
-
-        
+    
     });
 
-    if (lista) {
+    if (visualizar) {
         return res.json({
             error: false,
-            lista
+            visualizar
         });
     } else {
         return res.status(400).json({
