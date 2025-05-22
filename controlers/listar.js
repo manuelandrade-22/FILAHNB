@@ -34,10 +34,7 @@ router.get("/listar", async (req, res) => {
         where:{
             status:"1"
         }
-
-
-        
-
+            
         
     });
 

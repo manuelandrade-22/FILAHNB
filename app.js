@@ -17,6 +17,9 @@ const listar = require("./controlers/listar");
 const visualizar = require("./controlers/visualizar");
 const cadastrar = require("./controlers/cadastrar");
 const atender = require("./controlers/atender");
+const sendBlip = require("./controlers/sendBlip");
+const cancelar = require("./controlers/cancelar");
+
 
 
 
@@ -25,6 +28,9 @@ app.use('/', listar);
 app.use('/', visualizar);
 app.use('/', cadastrar);
 app.use('/', atender);
+app.use('/', sendBlip);
+app.use('/', cancelar);
+
 
 app.listen(8080, ()=>{
     console.log("Servidor iniciado na porta: http://localhost:8080")

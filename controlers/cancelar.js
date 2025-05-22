@@ -1,0 +1,101 @@
+const express = require("express");
+const db = require('../db/models'); 
+const axios = require('axios');
+const { v4: uuidv4 } = require('uuid');
+const { Op } = require('sequelize');  // ✅ Correção AQUI!
+
+const router = express.Router();
+
+router.post("/cancelar/:id", async (req, res) => {
+    const { id }= req.params;  
+
+    try {
+        const pacienteCancelado = await db.pacientCont.findOne({
+            attributes: ['id', 'name', 'cell', 'senha', 'posicao','status'],
+            where: { id},
+            include: [{ model:db.situacoes , attributes: ['nomeSituacao'] }]
+         });
+
+        console.log("Paciente cancelado:", pacienteCancelado);
+
+        if (!pacienteCancelado) {
+            return res.status(404).json({ error: true, message: "Paciente não encontrado." });
+        }
+
+        const posicaoCancelada = pacienteCancelado.posicao;
+
+        await db.pacientCont.update(
+            { status: "2" },
+            { where: { id: id} }
+        );
+
+        const pacientesAfetados = await db.pacientCont.findAll({
+            attributes: ['id', 'name', 'cell', 'senha', 'posicao', 'status'],
+            where: {
+                status: "1",
+                posicao: { [Op.gt]: posicaoCancelada }  // ✅ Correção AQUI!
+            },
+            order: [['posicao', 'ASC']]
+        });
+
+        for (const paciente of pacientesAfetados) {
+            const novaPosicao = paciente.posicao - 1;
+
+            await db.pacientCont.update(
+                { posicao: novaPosicao },
+                { where: { id: paciente.id } }
+            );
+
+            const payload = {
+                id: uuidv4(),
+                to: paciente.cell + '@wa.gw.msging.net',
+                type: 'application/json',
+                content: {
+                    type: 'template',
+                    template: {
+                        namespace: '3ae107a7_3074_41f7_a70a_eddca81e2205',
+                        name: 'maia_fila_espera',
+                        language: { code: 'pt_BR', policy: 'deterministic' },
+                        components: [
+                            {
+                                type: 'body',
+                                parameters: [
+                                    { type: 'text', text: paciente.name },
+                                    { type: 'text', text: paciente.senha },
+                                    { type: 'text', text: String(novaPosicao) }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            };
+
+            try {
+                const response = await axios.post("https://http.msging.net/messages", payload, {
+                    headers: {
+                        'Authorization': 'Key bmlwbzpBMWFlblB0aEdJUkpIeUd2cjFIbg==',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                console.log(`Mensagem enviada para ${paciente.name}:`, response.data);
+            } catch (e) {
+                console.error(`Erro ao enviar mensagem para ${paciente.name}:`, e.message);
+            }
+        }
+
+        return res.json({
+            error: false,
+            message: "Paciente cancelado e mensagens enviadas para os demais afetados."
+        });
+
+    } catch (error) {
+        console.error("Erro ao cancelar paciente:", error);
+        return res.status(500).json({ 
+            error: true, 
+            message: "Erro ao cancelar paciente.", 
+            detalhe: error.message 
+        });
+    }
+});
+
+module.exports = router;
