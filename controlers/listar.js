@@ -29,7 +29,7 @@ router.get("/listar", async (req, res) => {
 
 
         // Ordenar os registros pela coluna id na forma decrescente
-        order: [['id', 'DESC']],
+        order: [['id', 'ASC']],
 
         where:{
             status:"1"
